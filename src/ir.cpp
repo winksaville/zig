@@ -16,6 +16,24 @@
 #include "translate_c.hpp"
 #include "util.hpp"
 
+#define DBG_ENABLED 1
+#include "dbg/dbg.h"
+#include "dbg/dbg_util.h"
+#include "dbg/dbg_ctx_impl_file.h"
+
+static dbg_ctx_t* dc = NULL;
+INITIALIZER(initialize) {
+    dc = dbg_ctx_impl_file_create(32, stderr);
+    dbg_sb(dc, 0, 1);
+    if (DBG(dc,0)) fprintf(stderr, "initialize:# %s\n", __FILE__);
+}
+
+FINALIZER(finalize) {
+    if (DBG(dc,0)) fprintf(stderr, "finalize:# %s\n", __FILE__);
+    dbg_ctx_destroy(dc);
+    dc = NULL;
+}
+
 struct IrExecContext {
     ConstExprValue *mem_slot_list;
     size_t mem_slot_count;
@@ -16190,13 +16208,18 @@ static TypeTableEntry *ir_analyze_instruction_compile_log(IrAnalyze *ira, IrInst
 }
 
 static TypeTableEntry *ir_analyze_instruction_err_name(IrAnalyze *ira, IrInstructionErrName *instruction) {
+    if (DBG(dc,0)) dbg_printf(dc, "+\n");
     IrInstruction *value = instruction->value->other;
-    if (type_is_invalid(value->value.type))
+    if (type_is_invalid(value->value.type)) {
+        if (DBG(dc,0)) dbg_printf(dc, "- ERR return entry_invalid after type_is_invalid\n");
         return ira->codegen->builtin_types.entry_invalid;
+    }
 
     IrInstruction *casted_value = ir_implicit_cast(ira, value, value->value.type);
-    if (type_is_invalid(casted_value->value.type))
+    if (type_is_invalid(casted_value->value.type)) {
+        if (DBG(dc,0)) dbg_printf(dc, "- ERR return entry_invalid after ir_implicit cast\n");
         return ira->codegen->builtin_types.entry_invalid;
+    }
 
     TypeTableEntry *u8_ptr_type = get_pointer_to_type_extra(ira->codegen, ira->codegen->builtin_types.entry_u8,
             true, false, PtrLenUnknown, get_abi_alignment(ira->codegen, ira->codegen->builtin_types.entry_u8), 0, 0);
@@ -16209,11 +16232,13 @@ static TypeTableEntry *ir_analyze_instruction_err_name(IrAnalyze *ira, IrInstruc
         }
         ConstExprValue *out_val = ir_build_const_from(ira, &instruction->base);
         copy_const_val(out_val, err->cached_error_name_val, true);
+        if (DBG(dc,0)) dbg_printf(dc, "- OK return str_type\n");
         return str_type;
     }
 
     ira->codegen->generate_error_name_table = true;
     ir_build_err_name_from(&ira->new_irb, &instruction->base, value);
+    if (DBG(dc,0)) dbg_printf(dc, "- OK return str_type after ir_build_err_name_from\n");
     return str_type;
 }
 
