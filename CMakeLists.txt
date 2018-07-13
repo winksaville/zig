@@ -423,6 +423,9 @@ set(ZIG_SOURCES
     "${CMAKE_SOURCE_DIR}/src/tokenizer.cpp"
     "${CMAKE_SOURCE_DIR}/src/util.cpp"
     "${CMAKE_SOURCE_DIR}/src/translate_c.cpp"
+    "${CMAKE_SOURCE_DIR}/src/dbg/dbg.cpp"
+    "${CMAKE_SOURCE_DIR}/src/dbg/dbg_ctx_impl_file.cpp"
+    "${CMAKE_SOURCE_DIR}/src/dbg/dbg_ctx_impl_mem.cpp"
 )
 set(ZIG_CPP_SOURCES
     "${CMAKE_SOURCE_DIR}/src/zig_llvm.cpp"
