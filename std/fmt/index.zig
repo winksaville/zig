@@ -954,105 +954,108 @@ test "std.fmt.format" {
     }
     {
         var buf1: [32]u8 = undefined;
+        var buf2: [32]u8 = undefined;
         const value = "abc";
 
         // Print Pointer Path3
-        const result = try bufPrint(buf1[0..], "&value: {p}\n", &value);
-        //wink_log("&value=\"abc\"; buf1="); wink_log(buf1[0..]);
-        assert(mem.startsWith(u8, result, "&value: u8@"));
+        const expected = try bufPrint(buf2[0..], "&value: u8@{x}", @ptrToInt(&value));
+        const actual = try bufPrint(buf1[0..], "&value: {p}", &value);
+        try testExpectedActual(expected, actual);
     }
     {
         var buf1: [32]u8 = undefined;
-        const value = "abc";
-
-        // Print Pointer Path3
-        const result = try bufPrint(buf1[0..], "value: {p}\n", value);
-        //wink_log("&value=\"abc\"; buf1="); wink_log(buf1[0..]);
-        assert(mem.startsWith(u8, result, "value: u8@"));
-    }
-    {
-        var buf1: [32]u8 = undefined;
+        var buf2: [32]u8 = undefined;
         var value: u1 = 1;
 
         // Print Pointer Path3
-        const result = try bufPrint(buf1[0..], "&value: {p}\n", &value);
-        //wink_log("value: u1 = 1; buf1="); wink_log(buf1[0..]);
-        assert(mem.startsWith(u8, result, "&value: u1@"));
+        const expected = try bufPrint(buf1[0..], "&value: u1@{x}", @ptrToInt(&value));
+        const actual = try bufPrint(buf2[0..], "&value: {p}", &value);
+        try testExpectedActual(expected, actual);
     }
     {
         var buf1: [32]u8 = undefined;
+        var buf2: [32]u8 = undefined;
         var value: u8 = 8;
 
         // Print Pointer Path3
-        const result = try bufPrint(buf1[0..], "&value: {p}\n", &value);
-        //wink_log("value: u8 = 8; buf1="); wink_log(buf1[0..]);
-        assert(mem.startsWith(u8, result, "&value: u8@"));
+        const expected = try bufPrint(buf1[0..], "&value: u8@{x}", @ptrToInt(&value));
+        const actual = try bufPrint(buf2[0..], "&value: {p}", &value);
+        //wink_log_strln("  actual=", actual);
+        try testExpectedActual(expected, actual);
     }
     {
         var buf1: [32]u8 = undefined;
+        var buf2: [32]u8 = undefined;
         var value: u127 = 127;
 
         // Print Pointer Path3
-        const result = try bufPrint(buf1[0..], "&value: {p}\n", &value);
-        //wink_log("value: u127 = 127; buf1="); wink_log(buf1[0..]);
-        assert(mem.startsWith(u8, result, "&value: u127@"));
+        const expected = try bufPrint(buf1[0..], "&value: u127@{x}", @ptrToInt(&value));
+        const actual = try bufPrint(buf2[0..], "&value: {p}", &value);
+        try testExpectedActual(expected, actual);
     }
     {
         var buf1: [32]u8 = undefined;
+        var buf2: [32]u8 = undefined;
         var value: u128 = 128;
 
         // Print Pointer Path3
-        const result = try bufPrint(buf1[0..], "&value: {p}\n", &value);
-        //wink_log("value: u128 = 128; buf1="); wink_log(buf1[0..]);
-        assert(mem.startsWith(u8, result, "&value: u128@"));
+        const expected = try bufPrint(buf1[0..], "&value: u128@{x}", @ptrToInt(&value));
+        const actual = try bufPrint(buf2[0..], "&value: {p}", &value);
+        try testExpectedActual(expected, actual);
     }
     {
         var buf1: [32]u8 = undefined;
+        var buf2: [32]u8 = undefined;
         var value: i2 = -1;
 
         // Print Pointer Path3
-        const result = try bufPrint(buf1[0..], "&value: {p}\n", &value);
-        //wink_log("value: i2 = -1; buf1="); wink_log(buf1[0..]);
-        assert(mem.startsWith(u8, result, "&value: i2@"));
+        const expected = try bufPrint(buf1[0..], "&value: i2@{x}", @ptrToInt(&value));
+        const actual = try bufPrint(buf2[0..], "&value: {p}", &value);
+        try testExpectedActual(expected, actual);
     }
     {
         var buf1: [32]u8 = undefined;
-        var value: i8 = 8;
+        var buf2: [32]u8 = undefined;
+        var value: i8 = -8;
 
         // Print Pointer Path3
-        const result = try bufPrint(buf1[0..], "&value: {p}\n", &value);
-        //wink_log("value: i8 = 8; buf1="); wink_log(buf1[0..]);
-        assert(mem.startsWith(u8, result, "&value: i8@"));
+        const expected = try bufPrint(buf1[0..], "&value: i8@{x}", @ptrToInt(&value));
+        const actual = try bufPrint(buf2[0..], "&value: {p}", &value);
+        try testExpectedActual(expected, actual);
     }
     {
         var buf1: [32]u8 = undefined;
-        var value: i127 = 127;
+        var buf2: [32]u8 = undefined;
+        var value: i127 = -127;
 
         // Print Pointer Path3
-        const result = try bufPrint(buf1[0..], "&value: {p}\n", &value);
-        //wink_log("value: i127 = 127; buf1="); wink_log(buf1[0..]);
-        assert(mem.startsWith(u8, result, "&value: i127@"));
+        const expected = try bufPrint(buf1[0..], "&value: i127@{x}", @ptrToInt(&value));
+        const actual = try bufPrint(buf2[0..], "&value: {p}", &value);
+        try testExpectedActual(expected, actual);
     }
     {
         var buf1: [32]u8 = undefined;
-        var value: i128 = 128;
+        var buf2: [32]u8 = undefined;
+        var value: i128 = -128;
 
         // Print Pointer Path3
-        const result = try bufPrint(buf1[0..], "&value: {p}\n", &value);
-        //wink_log("value: i128 = 128; buf1="); wink_log(buf1[0..]);
-        assert(mem.startsWith(u8, result, "&value: i128@"));
+        const expected = try bufPrint(buf1[0..], "&value: i128@{x}", @ptrToInt(&value));
+        const actual = try bufPrint(buf2[0..], "&value: {p}", &value);
+        try testExpectedActual(expected, actual);
     }
     {
         var buf1: [32]u8 = undefined;
-        const value = []u64 { 123 };
+        var buf2: [32]u8 = undefined;
+        var value = []u64 { 123 };
 
         // Print Pointer Path1
-        const result = try bufPrint(buf1[0..], "&value: {p}\n", &value);
-        //wink_log("value: ([][*]const u8 {c\"one\"}; buf1="); wink_log(buf1[0..]);
-        assert(mem.startsWith(u8, result, "&value: [1]u64@"));
+        const expected = try bufPrint(buf1[0..], "&value: [1]u64@{x}", @ptrToInt(&value));
+        const actual = try bufPrint(buf2[0..], "&value: {p}", &value);
+        try testExpectedActual(expected, actual);
     }
     {
         var buf1: [32]u8 = undefined;
+        var buf2: [32]u8 = undefined;
         const value = ([][*]const u8){
             c"one",
             c"two",
@@ -1065,9 +1068,9 @@ test "std.fmt.format" {
         assert(u32_ptr_info.Pointer.size == TypeInfo.Pointer.Size.Many);
 
         // Print Pointer Path4
-        const result = try bufPrint(buf1[0..], "&value: {p}\n", value[0]);
-        //wink_log("value: ([][*]const u8 {c\"one\"}; buf1="); wink_log(buf1[0..]);
-        assert(mem.startsWith(u8, result, "&value: u8@"));
+        const expected = try bufPrint(buf1[0..], "value[0]: u8@{x}", @ptrToInt(value[0]));
+        const actual = try bufPrint(buf2[0..], "value[0]: {p}", value[0]);
+        try testExpectedActual(expected, actual);
     }
     {
         var buf1: [32]u8 = undefined;
@@ -1075,25 +1078,20 @@ test "std.fmt.format" {
         var value = []u16{1, 2};
 
         // Print Pointer Path5
-        const result1 = try bufPrint(buf1[0..], "value: {p}\n", value);
-        //wink_log("value = []u16{1, 2}; buf1="); wink_log(buf1[0..]);
-        assert(mem.startsWith(u8, result1, "value: u16@"));
-
-        // Print Pointer Path3
-        const result2 = try bufPrint(buf2[0..], "value: {p}\n", &value[0]);
-        //wink_log("&value[0] = []u16{1, 2}; buf2="); wink_log(buf1[0..]);
-        assert(mem.startsWith(u8, result2, "value: u16@"));
-        assert(mem.eql(u8, result1, result2));
+        const expected = try bufPrint(buf1[0..], "value[0]: u16@{x}", @ptrToInt(&value[0]));
+        const actual = try bufPrint(buf2[0..], "value[0]: {p}", value);
+        try testExpectedActual(expected, actual);
     }
     {
         // Slice
         var buf1: [32]u8 = undefined;
+        var buf2: [32]u8 = undefined;
         var value = []u16{1, 2};
 
         // Print Pointer Path3
-        var result = try bufPrint(buf1[0..], "value: {p}\n", &value[0..]);
-        //wink_log("&value[0..] = []u16{1, 2}; buf1="); wink_log(buf1[0..]);
-        assert(mem.startsWith(u8, result, "value: []u16@"));
+        var expected = try bufPrint(buf1[0..], "value: []u16@{x}", @ptrToInt(&value[0]));
+        var actual = try bufPrint(buf1[0..], "value: {p}", &value[0..]);
+        try testExpectedActual(expected, actual);
     }
     try testFmt("buf: Test \n", "buf: {s5}\n", "Test");
     try testFmt("buf: Test\n Other text", "buf: {s}\n Other text", "Test");
@@ -1107,12 +1105,13 @@ test "std.fmt.format" {
             unused: u8,
         };
         var buf1: [32]u8 = undefined;
+        var buf2: [32]u8 = undefined;
         const value = Struct{ .unused = 42 };
 
         // Print Pointer Path2
-        const result = try bufPrint(buf1[0..], "pointer: {p}\n", &value);
-        //wink_log("&value = Struct{ .unused = 42}; buf1="); wink_log(buf1[0..]);
-        assert(mem.startsWith(u8, result, "pointer: Struct@"));
+        const expected = try bufPrint(buf1[0..], "pointer: Struct@{x}", @ptrToInt(&value));
+        const actual = try bufPrint(buf2[0..], "pointer: {p}", &value);
+        try testExpectedActual(expected, actual);
     }
     {
         var buf1: [32]u8 = undefined;
@@ -1357,17 +1356,23 @@ test "std.fmt.format" {
     }
 }
 
-fn testFmt(expected: []const u8, comptime template: []const u8, args: ...) !void {
-    var buf: [100]u8 = undefined;
-    const result = try bufPrint(buf[0..], template, args);
-    if (mem.eql(u8, result, expected)) return;
+fn testExpectedActual(expected: []const u8, actual: []const u8) !void {
+    //wink_log_strln("expected=", expected);
+    //wink_log_strln("  actual=", actual);
+    if (mem.eql(u8, expected, actual)) return;
 
     std.debug.warn("\n====== expected this output: =========\n");
     std.debug.warn("{}", expected);
     std.debug.warn("\n======== instead found this: =========\n");
-    std.debug.warn("{}", result);
+    std.debug.warn("{}", actual);
     std.debug.warn("\n======================================\n");
     return error.TestFailed;
+}
+
+fn testFmt(expected: []const u8, comptime template: []const u8, args: ...) !void {
+    var buf: [100]u8 = undefined;
+    const result = try bufPrint(buf[0..], template, args);
+    return testExpectedActual(expected, result);
 }
 
 pub fn trim(buf: []const u8) []const u8 {
