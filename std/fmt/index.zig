@@ -11,26 +11,10 @@ const TypeId = @import("builtin").TypeId;
 
 const max_int_digits = 65;
 
-
-//fn wink_log(str: []const u8) void {
-//    var stdout_file = std.io.getStdOut() catch { return; };
-//    var stdout = &std.io.FileOutStream.init(&stdout_file).stream;
-//    stdout.write(str) catch { return; };
-//}
-//
-//fn wink_log_strln(str: []const u8, str2: []const u8) void {
-//    var stdout_file = std.io.getStdOut() catch { return; };
-//    var stdout = &std.io.FileOutStream.init(&stdout_file).stream;
-//    stdout.write(str) catch { return; };
-//    stdout.write(str2) catch { return; };
-//    stdout.write("\n") catch { return; };
-//}
-
 /// Renders fmt string with args, calling output with slices of bytes.
 /// If `output` returns an error, the error is returned from `format` and
 /// `output` is not called again.
 pub fn format(context: var, comptime Errors: type, output: fn (@typeOf(context), []const u8) Errors!void, comptime fmt: []const u8, args: ...) Errors!void {
-    //wink_log_strln("format:+ ", fmt);
     const State = enum {
         Start,
         OpenBrace,
@@ -46,9 +30,7 @@ pub fn format(context: var, comptime Errors: type, output: fn (@typeOf(context),
         switch (state) {
             State.Start => switch (c) {
                 '{' => {
-                    //wink_log("format: State.Start '{' -> State.OpenBrace\n");
                     if (start_index < i) {
-                        //wink_log_strln("format: State.Start '{' call output fmt: ", fmt[start_index..i]);
                         try output(context, fmt[start_index..i]);
                     }
                     start_index = i;
@@ -56,9 +38,7 @@ pub fn format(context: var, comptime Errors: type, output: fn (@typeOf(context),
                 },
 
                 '}' => {
-                    //wink_log("format: State.Start '}' -> State.CloseBrase\n");
                     if (start_index < i) {
-                        //wink_log_strln("format: State.Start '}' call output fmt: ", fmt[start_index..i]);
                         try output(context, fmt[start_index..i]);
                     }
                     state = State.CloseBrace;
@@ -67,25 +47,21 @@ pub fn format(context: var, comptime Errors: type, output: fn (@typeOf(context),
             },
             State.OpenBrace => switch (c) {
                 '{' => {
-                    //wink_log("format: State.OpenBrace '}' -> State.Start, start_index = i\n");
                     state = State.Start;
                     start_index = i;
                 },
                 '}' => {
-                    //wink_log_strln("format: State.OpenBrace '}' -> call formatType, State.Start, fmt[0..0] fmt: ", fmt[0..0]);
                     try formatType(args[next_arg], fmt[0..0], context, Errors, output);
                     next_arg += 1;
                     state = State.Start;
                     start_index = i + 1;
                 },
                 else => {
-                    //wink_log("format: State.OpenBrace else -> State.FormatString\n");
                     state = State.FormatString;
                 },
             },
             State.CloseBrace => switch (c) {
                 '}' => {
-                    //wink_log("format: State.CloseBrace '}' -> State.Start, start_index = i\n");
                     state = State.Start;
                     start_index = i;
                 },
@@ -94,15 +70,12 @@ pub fn format(context: var, comptime Errors: type, output: fn (@typeOf(context),
             State.FormatString => switch (c) {
                 '}' => {
                     const s = start_index + 1;
-                    //wink_log_strln("format: State.FormatString '}' -> State.Start, s = start_index+1, call formatType, start_index = i+1 fmt: ", fmt[s..i]);
                     try formatType(args[next_arg], fmt[s..i], context, Errors, output);
                     next_arg += 1;
                     state = State.Start;
                     start_index = i + 1;
                 },
-                else => {
-                    //wink_log("format: State.FormatString else ignore\n");
-                },
+                else => {},
             },
         }
     }
@@ -115,10 +88,8 @@ pub fn format(context: var, comptime Errors: type, output: fn (@typeOf(context),
         }
     }
     if (start_index < fmt.len) {
-        //wink_log_strln("format: output rest of fmt: ", fmt[start_index..]);
         try output(context, fmt[start_index..]);
     }
-    //wink_log("format:-\n");
 }
 
 pub fn formatType(
@@ -128,67 +99,52 @@ pub fn formatType(
     comptime Errors: type,
     output: fn (@typeOf(context), []const u8) Errors!void,
 ) Errors!void {
-    //wink_log_strln("formatType:+ ", fmt);
     const T = @typeOf(value);
     if (T == error) {
-        //wink_log_strln("formatType:- T == error call output error.", @errorName(value));
         try output(context, "error.");
         return output(context, @errorName(value));
     }
     switch (@typeInfo(T)) {
         builtin.TypeId.Int, builtin.TypeId.Float => {
-            //wink_log("formatType:- TypeId.Int | Float call formatValue\n");
             return formatValue(value, fmt, context, Errors, output);
         },
         builtin.TypeId.Void => {
-            //wink_log("formatType:- TypeId.Void call output 'void'\n");
             return output(context, "void");
         },
         builtin.TypeId.Bool => {
-            //wink_log("formatType:- TypeId.Bool call output true|false\n");
             return output(context, if (value) "true" else "false");
         },
         builtin.TypeId.Optional => {
             if (value) |payload| {
-                //wink_log("formatType:- TypeId.Optional call output payload\n");
                 return formatType(payload, fmt, context, Errors, output);
             } else {
-                //wink_log("formatType:- TypeId.Optional call output null\n");
                 return output(context, "null");
             }
         },
         builtin.TypeId.ErrorUnion => {
             if (value) |payload| {
-                //wink_log("formatType:- TypeId.ErrorUnion call formatType payload\n");
                 return formatType(payload, fmt, context, Errors, output);
             } else |err| {
-                //wink_log("formatType:- TypeId.ErrorUnion call formatType err\n");
                 return formatType(err, fmt, context, Errors, output);
             }
         },
         builtin.TypeId.ErrorSet => {
-            //wink_log_strln("formatType:- TypeId.ErrorSet call output error.", @errorName(value));
             try output(context, "error.");
             return output(context, @errorName(value));
         },
         builtin.TypeId.Promise => {
-            //wink_log_strln("formatType:- TypeId.Promise call format promise@", @ptrToInt(value));
             return format(context, Errors, output, "promise@{x}", @ptrToInt(value));
         },
         builtin.TypeId.Pointer => |ptr_info| switch (ptr_info.size) {
             builtin.TypeInfo.Pointer.Size.One => switch (@typeInfo(ptr_info.child)) {
                 builtin.TypeId.Array => |info| {
                     if (info.child == u8) {
-                        //wink_log_strln("formatType:- TypeId.Array inof.child == u8 call formatText fmt: ", fmt);
                         return formatText(value, fmt, context, Errors, output);
                     }
-                    //wink_log("formatType:- call format - Print Pointer Path1\n");
                     if (fmt[0] != 'p') @compileError("Expecting \"{p}\" to Print Pointer Path1");
-                    //wink_log("formatType:- TypeId.Array info.child != u8 call format {}@{x}\n");
                     return format(context, Errors, output, "{}@{x}", @typeName(T.Child), @ptrToInt(value));
                 },
                 builtin.TypeId.Enum, builtin.TypeId.Union, builtin.TypeId.Struct => {
-                    //wink_log("formatType:  TypeId.Enum|Union|Struct info.child != u8 call format {}@{x}\n");
                     const has_cust_fmt = comptime cf: {
                         const info = @typeInfo(T.Child);
                         const defs = switch (info) {
@@ -206,49 +162,34 @@ pub fn formatType(
                         break :cf false;
                     };
 
-                    if (has_cust_fmt) {
-                        //wink_log_strln("formatType:- has_cust_fmt call custom format fmt: ", fmt);
-                        return value.format(fmt, context, Errors, output);
-                    }
-                   //wink_log("formatType:- call format - Print Pointer Path2\n");
-                    if (fmt[0] != 'p') @compileError("Expecting \"{p}\" to Print Pointer Path2");
-                    //wink_log("formatType:- !has_cust_fmt call format fmt: {}@{x}, @typeName(T.Child), @ptrToInt(value)\n");
+                    if (has_cust_fmt) return value.format(fmt, context, Errors, output);
                     return format(context, Errors, output, "{}@{x}", @typeName(T.Child), @ptrToInt(value));
                 },
                 else => {
-                    //wink_log("formatType:- call format - Print Pointer Path3\n");
                     if (fmt[0] != 'p') @compileError("Expecting \"{p}\" to Print Pointer Path3");
-                    //wink_log("formatType:- print a pointer fmt: {}@{x}, @typeName(T.Child), @ptrToInt(value)\n");
                     return format(context, Errors, output, "{}@{x}", @typeName(T.Child), @ptrToInt(value));
                 },
             },
             builtin.TypeInfo.Pointer.Size.Many => {
-                //wink_log("formatType:  TypeInfo.Pointer.Size.Many\n");
                 if (ptr_info.child == u8) {
                     if (fmt[0] == 's') {
                         const len = std.cstr.len(value);
-                        //wink_log_strln("formatType:- ptr_info.child == u8 && {s}, call format fmt: ", value[0..len]);
                         return formatText(value[0..len], fmt, context, Errors, output);
                     }
                 }
-                //wink_log("formatType:- call format - Print Pointer Path4\n");
                 if (fmt[0] != 'p') @compileError("Expecting \"{p}\" to Print Pointer Path4");
                 return format(context, Errors, output, "{}@{x}", @typeName(T.Child), @ptrToInt(value));
             },
             builtin.TypeInfo.Pointer.Size.Slice => {
                 const casted_value = ([]const u8)(value);
-                //wink_log_strln("formatType:- TypeInfo.Pointer.Size.Slice call output: ", casted_value);
                 return output(context, casted_value);
             },
         },
         builtin.TypeId.Array => |info| {
             if (info.child == u8) {
-                //wink_log_strln("formatType:- TypeId.Array info.child == u8, call formatText fmt: ", fmt);
                 return formatText(value, fmt, context, Errors, output);
             }
-            //wink_log("formatType:- call format - Print Pointer Path5\n");
             if (fmt[0] != 'p') @compileError("Expecting \"{p}\" to Print Pointer Path5");
-            //wink_log_strln("formatType:- TypeId.Array info.child != u8, call format {}@{x}");
             return format(context, Errors, output, "{}@{x}", @typeName(T.Child), @ptrToInt(&value));
         },
         else => @compileError("Unable to format type '" ++ @typeName(T) ++ "'"),
@@ -291,7 +232,6 @@ pub fn formatIntValue(
     comptime Errors: type,
     output: fn (@typeOf(context), []const u8) Errors!void,
 ) Errors!void {
-    //wink_log_strln("formatIntValue: ", fmt);
     comptime var radix = 10;
     comptime var uppercase = false;
     comptime var width = 0;
@@ -353,7 +293,6 @@ pub fn formatText(
     comptime Errors: type,
     output: fn (@typeOf(context), []const u8) Errors!void,
 ) Errors!void {
-    //wink_log("formatText: <"); wink_log(fmt); wink_log(">: \""); wink_log(bytes); wink_log("\"\n");
     if (fmt.len > 0) {
         switch (fmt[0]) {
             's' => {
@@ -362,7 +301,6 @@ pub fn formatText(
                 return formatBuf(bytes, width, context, Errors, output);
             },
             'p' => {
-                //wink_log_strln("found {p}", "");
                 return format(context, Errors, output, "{p}", &bytes[0]);
             },
             else => @compileError("Unknown format character: " ++ []u8{fmt[0]}),
@@ -377,7 +315,6 @@ pub fn formatAsciiChar(
     comptime Errors: type,
     output: fn (@typeOf(context), []const u8) Errors!void,
 ) Errors!void {
-    //wink_log("formatAsciiChar:\n");
     return output(context, (*[1]u8)(&c)[0..]);
 }
 
@@ -388,7 +325,6 @@ pub fn formatBuf(
     comptime Errors: type,
     output: fn (@typeOf(context), []const u8) Errors!void,
 ) Errors!void {
-    //wink_log_strln("formatBuf:", buf);
     try output(context, buf);
 
     var leftover_padding = if (width > buf.len) (width - buf.len) else return;
@@ -408,7 +344,6 @@ pub fn formatFloatScientific(
     comptime Errors: type,
     output: fn (@typeOf(context), []const u8) Errors!void,
 ) Errors!void {
-    //wink_log("formatFloatScientific\n");
     var x = @floatCast(f64, value);
 
     // Errol doesn't handle these special cases.
@@ -504,7 +439,6 @@ pub fn formatFloatDecimal(
     comptime Errors: type,
     output: fn (@typeOf(context), []const u8) Errors!void,
 ) Errors!void {
-    //wink_log("formatFloatDecimal\n");
     var x = f64(value);
 
     // Errol doesn't handle these special cases.
@@ -651,7 +585,6 @@ pub fn formatBytes(
     comptime Errors: type,
     output: fn (@typeOf(context), []const u8) Errors!void,
 ) Errors!void {
-    //wink_log("formatBytes\n");
     if (value == 0) {
         return output(context, "0B");
     }
@@ -693,7 +626,6 @@ pub fn formatInt(
     comptime Errors: type,
     output: fn (@typeOf(context), []const u8) Errors!void,
 ) Errors!void {
-    //wink_log("formatInt\n");
     if (@typeOf(value).is_signed) {
         return formatIntSigned(value, base, uppercase, width, context, Errors, output);
     } else {
@@ -776,7 +708,6 @@ pub fn formatIntBuf(out_buf: []u8, value: var, base: u8, uppercase: bool, width:
         .out_buf = out_buf,
         .index = 0,
     };
-    //wink_log("formatIntBuf\n");
     formatInt(value, base, uppercase, width, &context, error{}, formatIntCallback) catch unreachable;
     return context.index;
 }
@@ -980,7 +911,6 @@ test "std.fmt.format" {
         // Print Pointer Path3
         const expected = try bufPrint(buf1[0..], "&value: u8@{x}", @ptrToInt(&value));
         const actual = try bufPrint(buf2[0..], "&value: {p}", &value);
-        //wink_log_strln("  actual=", actual);
         try testExpectedActual(expected, actual);
     }
     {
@@ -1357,8 +1287,6 @@ test "std.fmt.format" {
 }
 
 fn testExpectedActual(expected: []const u8, actual: []const u8) !void {
-    //wink_log_strln("expected=", expected);
-    //wink_log_strln("  actual=", actual);
     if (mem.eql(u8, expected, actual)) return;
 
     std.debug.warn("\n====== expected this output: =========\n");
