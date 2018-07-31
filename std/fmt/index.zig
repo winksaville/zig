@@ -1031,8 +1031,8 @@ test "std.fmt.format" {
         var value = []u16{1, 2};
 
         // Print Pointer Path3
-        var expected = try bufPrint(buf1[0..], "value: []u16@{x}", @ptrToInt(&value[0]));
-        var actual = try bufPrint(buf1[0..], "value: {p}", &value[0..]);
+        var expected = try bufPrint(buf1[0..], "value: u16@{x}", @ptrToInt(&value[0]));
+        var actual = try bufPrint(buf2[0..], "value: {p}", value[0..].ptr);
         try testExpectedActual(expected, actual);
     }
     try testFmt("buf: Test \n", "buf: {s5}\n", "Test");
