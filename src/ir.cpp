@@ -800,6 +800,10 @@ static constexpr IrInstructionId ir_instruction_id(IrInstructionAtomicLoad *) {
     return IrInstructionIdAtomicLoad;
 }
 
+static constexpr IrInstructionId ir_instruction_id(IrInstructionAtomicStore *) {
+    return IrInstructionIdAtomicStore;
+}
+
 static constexpr IrInstructionId ir_instruction_id(IrInstructionPromiseResultType *) {
     return IrInstructionIdPromiseResultType;
 }
@@ -2899,6 +2903,24 @@ static IrInstruction *ir_build_atomic_load(IrBuilder *irb, Scope *scope, AstNode
     return &instruction->base;
 }
 
+static IrInstruction *ir_build_atomic_store(IrBuilder *irb, Scope *scope, AstNode *source_node,
+        IrInstruction *operand_type, IrInstruction *ptr, IrInstruction *value,
+        IrInstruction *ordering, AtomicOrder resolved_ordering)
+{
+    IrInstructionAtomicStore *instruction = ir_build_instruction<IrInstructionAtomicStore>(irb, scope, source_node);
+    instruction->operand_type = operand_type;
+    instruction->ptr = ptr;
+    instruction->value = value;
+    instruction->ordering = ordering;
+    instruction->resolved_ordering = resolved_ordering;
+
+    if (operand_type != nullptr) ir_ref_instruction(operand_type, irb->current_basic_block);
+    ir_ref_instruction(ptr, irb->current_basic_block);
+    if (ordering != nullptr) ir_ref_instruction(ordering, irb->current_basic_block);
+
+    return &instruction->base;
+}
+
 static IrInstruction *ir_build_promise_result_type(IrBuilder *irb, Scope *scope, AstNode *source_node,
         IrInstruction *promise_type)
 {
@@ -4886,6 +4908,32 @@ static IrInstruction *ir_gen_builtin_fn_call(IrBuilder *irb, Scope *scope, AstNo
                     return arg2_value;
 
                 return ir_build_atomic_load(irb, scope, node, arg0_value, arg1_value, arg2_value,
+                        // this value does not mean anything since we passed non-null values for other arg
+                        AtomicOrderMonotonic);
+            }
+        case BuiltinFnIdAtomicStore:
+            {
+                AstNode *arg0_node = node->data.fn_call_expr.params.at(0);
+                IrInstruction *arg0_value = ir_gen_node(irb, arg0_node, scope);
+                if (arg0_value == irb->codegen->invalid_instruction)
+                    return arg0_value;
+
+                AstNode *arg1_node = node->data.fn_call_expr.params.at(1);
+                IrInstruction *arg1_value = ir_gen_node(irb, arg1_node, scope);
+                if (arg1_value == irb->codegen->invalid_instruction)
+                    return arg1_value;
+
+                AstNode *arg2_node = node->data.fn_call_expr.params.at(2);
+                IrInstruction *arg2_value = ir_gen_node(irb, arg2_node, scope);
+                if (arg2_value == irb->codegen->invalid_instruction)
+                    return arg2_value;
+
+                AstNode *arg3_node = node->data.fn_call_expr.params.at(3);
+                IrInstruction *arg3_value = ir_gen_node(irb, arg3_node, scope);
+                if (arg3_value == irb->codegen->invalid_instruction)
+                    return arg3_value;
+
+                return ir_build_atomic_store(irb, scope, node, arg0_value, arg1_value, arg2_value, arg3_value,
                         // this value does not mean anything since we passed non-null values for other arg
                         AtomicOrderMonotonic);
             }
@@ -20654,6 +20702,56 @@ static TypeTableEntry *ir_analyze_instruction_atomic_load(IrAnalyze *ira, IrInst
     return result->value.type;
 }
 
+static TypeTableEntry *ir_analyze_instruction_atomic_store(IrAnalyze *ira, IrInstructionAtomicStore *instruction) {
+    TypeTableEntry *operand_type = ir_resolve_atomic_operand_type(ira, instruction->operand_type->other);
+    if (type_is_invalid(operand_type))
+        return ira->codegen->builtin_types.entry_invalid;
+
+    IrInstruction *ptr_inst = instruction->ptr->other;
+    if (type_is_invalid(ptr_inst->value.type))
+        return ira->codegen->builtin_types.entry_invalid;
+
+    TypeTableEntry *ptr_type = get_pointer_to_type(ira->codegen, operand_type, true);
+    IrInstruction *casted_ptr = ir_implicit_cast(ira, ptr_inst, ptr_type);
+    if (type_is_invalid(casted_ptr->value.type))
+        return ira->codegen->builtin_types.entry_invalid;
+
+    IrInstruction *value = instruction->value->other;
+    TypeTableEntry *src_type = value->value.type;
+    if (type_is_invalid(src_type))
+        return ira->codegen->builtin_types.entry_invalid;
+    //if (*ptr_type != *src_type)
+    //    return ira->codegen->builtin_types.entry_invalid;
+
+    AtomicOrder ordering;
+    if (instruction->ordering == nullptr) {
+        ordering = instruction->resolved_ordering;
+    } else {
+        if (!ir_resolve_atomic_order(ira, instruction->ordering->other, &ordering))
+            return ira->codegen->builtin_types.entry_invalid;
+    }
+
+    if (ordering == AtomicOrderAcquire || ordering == AtomicOrderAcqRel) {
+        assert(instruction->ordering != nullptr);
+        ir_add_error(ira, instruction->ordering,
+            buf_sprintf("@atomicStore atomic ordering must not be Acquire or AcqRel"));
+        return ira->codegen->builtin_types.entry_invalid;
+    }
+
+    if (instr_is_comptime(casted_ptr)) {
+        IrInstruction *result = ir_get_deref(ira, &instruction->base, casted_ptr);
+        ir_link_new_instruction(result, &instruction->base);
+        assert(result->value.type != nullptr);
+        return result->value.type;
+    }
+
+    IrInstruction *result = ir_build_atomic_store(&ira->new_irb, instruction->base.scope,
+            instruction->base.source_node, nullptr, casted_ptr, value, nullptr, ordering);
+    ir_link_new_instruction(result, &instruction->base);
+    result->value.type = operand_type;
+    return result->value.type;
+}
+
 static TypeTableEntry *ir_analyze_instruction_promise_result_type(IrAnalyze *ira, IrInstructionPromiseResultType *instruction) {
     TypeTableEntry *promise_type = ir_resolve_type(ira, instruction->promise_type->other);
     if (type_is_invalid(promise_type))
@@ -21114,6 +21212,8 @@ static TypeTableEntry *ir_analyze_instruction_nocast(IrAnalyze *ira, IrInstructi
             return ir_analyze_instruction_atomic_rmw(ira, (IrInstructionAtomicRmw *)instruction);
         case IrInstructionIdAtomicLoad:
             return ir_analyze_instruction_atomic_load(ira, (IrInstructionAtomicLoad *)instruction);
+        case IrInstructionIdAtomicStore:
+            return ir_analyze_instruction_atomic_store(ira, (IrInstructionAtomicStore *)instruction);
         case IrInstructionIdPromiseResultType:
             return ir_analyze_instruction_promise_result_type(ira, (IrInstructionPromiseResultType *)instruction);
         case IrInstructionIdAwaitBookkeeping:
@@ -21267,6 +21367,7 @@ bool ir_has_side_effects(IrInstruction *instruction) {
         case IrInstructionIdMergeErrRetTraces:
         case IrInstructionIdMarkErrRetTracePtr:
         case IrInstructionIdAtomicRmw:
+        case IrInstructionIdAtomicStore:
             return true;
 
         case IrInstructionIdPhi:
