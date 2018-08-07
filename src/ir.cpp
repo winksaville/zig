@@ -20717,11 +20717,12 @@ static TypeTableEntry *ir_analyze_instruction_atomic_store(IrAnalyze *ira, IrIns
         return ira->codegen->builtin_types.entry_invalid;
 
     IrInstruction *value = instruction->value->other;
-    TypeTableEntry *src_type = value->value.type;
-    if (type_is_invalid(src_type))
+    if (type_is_invalid(value->value.type))
         return ira->codegen->builtin_types.entry_invalid;
-    //if (*ptr_type != *src_type)
-    //    return ira->codegen->builtin_types.entry_invalid;
+
+    IrInstruction *casted_value = ir_implicit_cast(ira, value, operand_type);
+    if (type_is_invalid(casted_value->value.type))
+        return ira->codegen->builtin_types.entry_invalid;
 
     AtomicOrder ordering;
     if (instruction->ordering == nullptr) {
