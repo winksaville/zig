@@ -20749,7 +20749,7 @@ static TypeTableEntry *ir_analyze_instruction_atomic_store(IrAnalyze *ira, IrIns
             instruction->base.source_node, nullptr, casted_ptr, value, nullptr, ordering);
     ir_link_new_instruction(result, &instruction->base);
     result->value.type = operand_type;
-    return result->value.type;
+    return ira->codegen->builtin_types.entry_void;
 }
 
 static TypeTableEntry *ir_analyze_instruction_promise_result_type(IrAnalyze *ira, IrInstructionPromiseResultType *instruction) {
