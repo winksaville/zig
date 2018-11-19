@@ -384,14 +384,17 @@ pub const StreamingParser = struct {
                     token.* = Token.initMarker(Token.Id.ArrayBegin);
                 },
                 '-' => {
+                    p.number_is_integer = true;
                     p.state = State.Number;
                     p.count = 0;
                 },
                 '0' => {
+                    p.number_is_integer = true;
                     p.state = State.NumberMaybeDotOrExponent;
                     p.count = 0;
                 },
                 '1'...'9' => {
+                    p.number_is_integer = true;
                     p.state = State.NumberMaybeDigitOrDotOrExponent;
                     p.count = 0;
                 },
@@ -450,14 +453,17 @@ pub const StreamingParser = struct {
                     token.* = Token.initMarker(Token.Id.ArrayBegin);
                 },
                 '-' => {
+                    p.number_is_integer = true;
                     p.state = State.Number;
                     p.count = 0;
                 },
                 '0' => {
+                    p.number_is_integer = true;
                     p.state = State.NumberMaybeDotOrExponent;
                     p.count = 0;
                 },
                 '1'...'9' => {
+                    p.number_is_integer = true;
                     p.state = State.NumberMaybeDigitOrDotOrExponent;
                     p.count = 0;
                 },
