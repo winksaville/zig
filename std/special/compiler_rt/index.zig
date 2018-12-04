@@ -52,6 +52,8 @@ comptime {
     @export("__fixunstfdi", @import("fixunstfdi.zig").__fixunstfdi, linkage);
     @export("__fixunstfti", @import("fixunstfti.zig").__fixunstfti, linkage);
 
+    @export("__fixdfti", @import("fixdfti.zig").__fixdfti, linkage);
+
     @export("__udivmoddi4", @import("udivmoddi4.zig").__udivmoddi4, linkage);
 
     @export("__udivsi3", __udivsi3, linkage);
