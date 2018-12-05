@@ -110,3 +110,7 @@ pub fn fixint(comptime fp_t: type, comptime fixint_t: type, a: fp_t) fixint_t {
     if (Di1) warn("result={}:{x}\n", result, result);
     return result;
 }
+
+test "import fixint" {
+    _ = @import("fixint_test.zig");
+}
