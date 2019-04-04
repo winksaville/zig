@@ -28,17 +28,17 @@ ifneq (none,$(LLVM_CFG))
 endif
 
 # Some defaults
-LLVM_BUILD_ENGINE ?= Unix Makefiles
+LLVM_BUILD_ENGINE ?= Ninja
 LLVM_BUILD_TYPE ?= Release
-LLVM_LINKER ?= bfd
+LLVM_LINKER ?= gold
 
 # There must always be a LLVM_CHECKOUT_REF
 ifeq (,$(LLVM_CHECKOUT_REF))
   $(error No LLVM_CHECKOUT_REF such as: branch, tag or SHA1)
 endif
 
-# If no LLVM_TGT_TAG use LLVM_CHECKOUT_REF but with '/' changed to '-'
-LLVM_TGT_TAG ?= $(subst /,-,$(LLVM_CHECKOUT_REF))
+# If no LLVM_TGT_TAG build one
+LLVM_TGT_TAG ?= $(subst /,-,$(LLVM_CHECKOUT_REF))-$(LLVM_BUILD_TYPE)
 
 LLVM_INSTALL_DIR_SYMLINK := $(LLVM_ROOT_DIR)/dist
 LLVM_SRC_DIR := $(LLVM_ROOT_DIR)/src
