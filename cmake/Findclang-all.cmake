@@ -7,10 +7,11 @@
 # CLANG_LIBRARIES
 # CLANG_LIBDIRS
 
-set(CLANG_LIBDIRS "/home/wink/local/lib")
+#set(CLANG_LIBDIRS "/home/wink/local/lib")
 
 if(MSVC)
-  find_package(CLANG REQUIRED CONFIG)
+  set(CLANG clang)
+  find_package(${CLANG} REQUIRED CONFIG)
 
   set(CLANG_LIBRARIES
       clangFrontendTool
@@ -37,14 +38,26 @@ if(MSVC)
       clangIndex
   )
 else()
-  find_path(CLANG_INCLUDE_DIRS NAMES clang/Frontend/ASTUnit.h)
+  find_path(CLANG_INCLUDE_DIRS NAMES clang/Frontend/ASTUnit.h
+      PATHS
+          /usr/lib/llvm/8/include
+          /usr/lib/llvm-8/include
+          /usr/lib/llvm-8.0/include
+          /usr/local/llvm80/include
+          /mingw64/include)
 
   macro(FIND_AND_ADD_CLANG_LIB _libname_)
       string(TOUPPER ${_libname_} _prettylibname_)
       find_library(CLANG_${_prettylibname_}_LIB NAMES ${_libname_}
           PATHS
               ${CLANG_LIBDIRS}
-	  NO_DEFAULT_PATH)
+              /usr/lib/llvm/8/lib
+              /usr/lib/llvm-8/lib
+              /usr/lib/llvm-8.0/lib
+              /usr/local/llvm80/lib
+              /mingw64/lib
+              /c/msys64/mingw64/lib
+              c:\\msys64\\mingw64\\lib)
       if(CLANG_${_prettylibname_}_LIB)
           set(CLANG_LIBRARIES ${CLANG_LIBRARIES} ${CLANG_${_prettylibname_}_LIB})
       endif()
@@ -74,19 +87,23 @@ else()
     FIND_AND_ADD_CLANG_LIB(clangCrossTU)
     FIND_AND_ADD_CLANG_LIB(clangIndex)
   else()
-    FIND_AND_ADD_CLANG_LIB(clang-all)
+    set(CLANG clang-all)
+    FIND_AND_ADD_CLANG_LIB(${CLANG})
     if(NOT CLANG_LIBRARIES)
-      message(FATAL_ERROR "NO clang-all")
+      message(FATAL_ERROR "NO ${CLANG}")
     endif()
   endif()
 endif()
 
-include(FindPackageHandleStandardArgs)
-find_package_handle_standard_args(clang-all DEFAULT_MSG CLANG_LIBRARIES CLANG_INCLUDE_DIRS)
+link_directories("${CMAKE_PREFIX_PATH}/lib")
+link_directories("${CLANG_LIBDIRS}")
 
-#message(STATUS "clang-all: clang-all_FOUND=\"${clang-all_FOUND}\"")
-#message(STATUS "clang-all: CLANG_INCLUDE_DIRS=\"${CLANG_INCLUDE_DIRS}\"")
-#message(STATUS "clang-all: CLANG_LIBRARIES=\"${CLANG_LIBRARIES}\"")
-#message(STATUS "clang-all: CLANG_LIBDIRS=\"${CLANG_LIBDIRS}\"")
+include(FindPackageHandleStandardArgs)
+find_package_handle_standard_args(${CLANG} DEFAULT_MSG CLANG_LIBRARIES CLANG_INCLUDE_DIRS)
+
+message(STATUS "clang-all: CLANG=\"${CLANG}\"")
+message(STATUS "clang-all: CLANG_INCLUDE_DIRS=\"${CLANG_INCLUDE_DIRS}\"")
+message(STATUS "clang-all: CLANG_LIBRARIES=\"${CLANG_LIBRARIES}\"")
+message(STATUS "clang-all: CLANG_LIBDIRS=\"${CLANG_LIBDIRS}\"")
 
 mark_as_advanced(CLANG_INCLUDE_DIRS CLANG_LIBRARIES CLANG_LIBDIRS)
