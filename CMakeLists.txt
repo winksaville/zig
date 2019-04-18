@@ -31,11 +31,7 @@ LIST(FIND CMAKE_PLATFORM_IMPLICIT_LINK_DIRECTORIES "${CMAKE_INSTALL_PREFIX}/lib"
 IF("${isSystemDir}" STREQUAL "-1")
    SET(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
 ENDIF("${isSystemDir}" STREQUAL "-1")
-
-message(WARNING "CMAKE_INSTALL_RPATH=${CMAKE_INSTALL_RPATH}")
 # --------------
-
-
 
 project(zig C CXX)
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
@@ -75,7 +71,6 @@ option(ZIG_TEST_COVERAGE "Build Zig with test coverage instrumentation" OFF)
 option(ZIG_FORCE_EXTERNAL_LLD "If your system has the LLD patches use it instead of the embedded LLD" OFF)
 
 set(LLVM_STATIC off CACHE BOOL "Link LLVM statically")
-message(WARNING "Root LLVM_STATIC=${LLVM_STATIC}")
 find_package(llvm)
 find_package(clang-all)
 

@@ -9,35 +9,34 @@
 
 set(CLANG_LIBDIRS "/home/wink/local/lib")
 
-#if(MSVC)
-#  find_package(CLANG REQUIRED CONFIG)
-#
-#  set(CLANG_LIBRARIES
-#      clangFrontendTool
-#      clangCodeGen
-#      clangFrontend
-#      clangDriver
-#      clangSerialization
-#      clangSema
-#      clangStaticAnalyzerFrontend
-#      clangStaticAnalyzerCheckers
-#      clangStaticAnalyzerCore
-#      clangAnalysis
-#      clangASTMatchers
-#      clangAST
-#      clangParse
-#      clangSema
-#      clangBasic
-#      clangEdit
-#      clangLex
-#      clangARCMigrate
-#      clangRewriteFrontend
-#      clangRewrite
-#      clangCrossTU
-#      clangIndex
-#  )
-#
-#else()
+if(MSVC)
+  find_package(CLANG REQUIRED CONFIG)
+
+  set(CLANG_LIBRARIES
+      clangFrontendTool
+      clangCodeGen
+      clangFrontend
+      clangDriver
+      clangSerialization
+      clangSema
+      clangStaticAnalyzerFrontend
+      clangStaticAnalyzerCheckers
+      clangStaticAnalyzerCore
+      clangAnalysis
+      clangASTMatchers
+      clangAST
+      clangParse
+      clangSema
+      clangBasic
+      clangEdit
+      clangLex
+      clangARCMigrate
+      clangRewriteFrontend
+      clangRewrite
+      clangCrossTU
+      clangIndex
+  )
+else()
   find_path(CLANG_INCLUDE_DIRS NAMES clang/Frontend/ASTUnit.h)
 
   macro(FIND_AND_ADD_CLANG_LIB _libname_)
@@ -80,14 +79,14 @@ set(CLANG_LIBDIRS "/home/wink/local/lib")
       message(FATAL_ERROR "NO clang-all")
     endif()
   endif()
-#endif()
+endif()
 
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(clang-all DEFAULT_MSG CLANG_LIBRARIES CLANG_INCLUDE_DIRS)
-message(STATUS "clang-all: clang-all_FOUND=\"${clang-all_FOUND}\"")
 
-message(STATUS "clang-all: CLANG_INCLUDE_DIRS=\"${CLANG_INCLUDE_DIRS}\"")
-message(STATUS "clang-all: CLANG_LIBRARIES=\"${CLANG_LIBRARIES}\"")
-message(STATUS "clang-all: CLANG_LIBDIRS=\"${CLANG_LIBDIRS}\"")
+#message(STATUS "clang-all: clang-all_FOUND=\"${clang-all_FOUND}\"")
+#message(STATUS "clang-all: CLANG_INCLUDE_DIRS=\"${CLANG_INCLUDE_DIRS}\"")
+#message(STATUS "clang-all: CLANG_LIBRARIES=\"${CLANG_LIBRARIES}\"")
+#message(STATUS "clang-all: CLANG_LIBDIRS=\"${CLANG_LIBDIRS}\"")
 
 mark_as_advanced(CLANG_INCLUDE_DIRS CLANG_LIBRARIES CLANG_LIBDIRS)
