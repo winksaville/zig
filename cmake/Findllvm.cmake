@@ -10,10 +10,13 @@
 find_program(LLVM_CONFIG_EXE
     NAMES llvm-config-8 llvm-config-8.0 llvm-config80 llvm-config
     PATHS
+        "/home/wink/local/bin"
         "/mingw64/bin"
         "/c/msys64/mingw64/bin"
         "c:/msys64/mingw64/bin"
         "C:/Libraries/llvm-8.0.0/bin")
+
+message(WARNING "LLVM_CONFIG_EXE=${LLVM_CONFIG_EXE}")
 
 if ("${LLVM_CONFIG_EXE}" STREQUAL "LLVM_CONFIG_EXE-NOTFOUND")
   message(FATAL_ERROR "unable to find llvm-config")
@@ -65,7 +68,8 @@ NEED_TARGET("WebAssembly")
 NEED_TARGET("X86")
 NEED_TARGET("XCore")
 
-if(NOT(CMAKE_BUILD_TYPE STREQUAL "Debug") OR ZIG_STATIC)
+if(ZIG_STATIC OR LLVM_STATIC)
+  message(WARNING "ZIG_STATIC=${ZIG_STATIC} LLVM_STATIC=${LLVM_STATIC}")
   execute_process(
       COMMAND ${LLVM_CONFIG_EXE} --libfiles --link-static
       OUTPUT_VARIABLE LLVM_LIBRARIES_SPACES
@@ -83,6 +87,8 @@ if(NOT(CMAKE_BUILD_TYPE STREQUAL "Debug") OR ZIG_STATIC)
       OUTPUT_VARIABLE LLVM_LIBDIRS_SPACES
       OUTPUT_STRIP_TRAILING_WHITESPACE)
   string(REPLACE " " ";" LLVM_LIBDIRS "${LLVM_LIBDIRS_SPACES}")
+else()
+  message(WARNING "ZIG_STATIC and LLVM_STATIC is OFF")
 endif()
 if(NOT LLVM_LIBRARIES)
   execute_process(
