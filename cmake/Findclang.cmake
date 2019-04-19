@@ -7,8 +7,14 @@
 # CLANG_LIBRARIES
 # CLANG_LIBDIRS
 
+## Right now clang is linked by:
+##   <clang_path>/libclang.so <clang_path>/clangFrontendTool.so <clang_path>/clangCodeGen.so ...
+## and I'd like it
+##   -L<clang_path> -lclang -lclangFrontendTool -lclangCodeGen
+
 if(MSVC)
-  find_package(CLANG REQUIRED CONFIG)
+  set(CLANG clang)
+  find_package(${CLANG} REQUIRED CONFIG)
 
   set(CLANG_LIBRARIES
       clangFrontendTool
@@ -34,7 +40,6 @@ if(MSVC)
       clangCrossTU
       clangIndex
   )
-
 else()
   find_path(CLANG_INCLUDE_DIRS NAMES clang/Frontend/ASTUnit.h
       PATHS
@@ -61,7 +66,14 @@ else()
       endif()
   endmacro(FIND_AND_ADD_CLANG_LIB)
 
-  if(ZIG_STATIC OR LLVM_STATIC)
+  if(NOT (ZIG_STATIC OR LLVM_STATIC))
+    # Try to use clang-all if we are NOT static linking
+    set(CLANG clang-all)
+    FIND_AND_ADD_CLANG_LIB(${CLANG})
+  endif()
+  if(NOT CLANG_LIBRARIES)
+    # Find the individual libraries which maybe static "*.a" or shared "*.so"
+    set(CLANG clang)
     FIND_AND_ADD_CLANG_LIB(clangFrontendTool)
     FIND_AND_ADD_CLANG_LIB(clangCodeGen)
     FIND_AND_ADD_CLANG_LIB(clangFrontend)
@@ -84,38 +96,18 @@ else()
     FIND_AND_ADD_CLANG_LIB(clangRewrite)
     FIND_AND_ADD_CLANG_LIB(clangCrossTU)
     FIND_AND_ADD_CLANG_LIB(clangIndex)
-  else()
-    FIND_AND_ADD_CLANG_LIB(clang-all)
-    if(NOT CLANG_LIBRARIES)
-      message(WARNING "NOT CLANG_LIBRARIES")
-      FIND_AND_ADD_CLANG_LIB(clangFrontendTool)
-      FIND_AND_ADD_CLANG_LIB(clangCodeGen)
-      FIND_AND_ADD_CLANG_LIB(clangFrontend)
-      FIND_AND_ADD_CLANG_LIB(clangDriver)
-      FIND_AND_ADD_CLANG_LIB(clangSerialization)
-      FIND_AND_ADD_CLANG_LIB(clangSema)
-      FIND_AND_ADD_CLANG_LIB(clangStaticAnalyzerFrontend)
-      FIND_AND_ADD_CLANG_LIB(clangStaticAnalyzerCheckers)
-      FIND_AND_ADD_CLANG_LIB(clangStaticAnalyzerCore)
-      FIND_AND_ADD_CLANG_LIB(clangAnalysis)
-      FIND_AND_ADD_CLANG_LIB(clangASTMatchers)
-      FIND_AND_ADD_CLANG_LIB(clangAST)
-      FIND_AND_ADD_CLANG_LIB(clangParse)
-      FIND_AND_ADD_CLANG_LIB(clangSema)
-      FIND_AND_ADD_CLANG_LIB(clangBasic)
-      FIND_AND_ADD_CLANG_LIB(clangEdit)
-      FIND_AND_ADD_CLANG_LIB(clangLex)
-      FIND_AND_ADD_CLANG_LIB(clangARCMigrate)
-      FIND_AND_ADD_CLANG_LIB(clangRewriteFrontend)
-      FIND_AND_ADD_CLANG_LIB(clangRewrite)
-      FIND_AND_ADD_CLANG_LIB(clangCrossTU)
-      FIND_AND_ADD_CLANG_LIB(clangIndex)
-    endif()
   endif()
-  message(WARNING "CLANG_LIBRARIES=${CLANG_LIBRARIES}")
 endif()
 
+#link_directories("${CMAKE_PREFIX_PATH}/lib")
+#link_directories("${CLANG_LIBDIRS}")
+
 include(FindPackageHandleStandardArgs)
-find_package_handle_standard_args(CLANG DEFAULT_MSG CLANG_LIBRARIES CLANG_INCLUDE_DIRS)
+find_package_handle_standard_args(${CLANG} DEFAULT_MSG CLANG_LIBRARIES CLANG_INCLUDE_DIRS)
+
+#message(STATUS "clang-all: CLANG=\"${CLANG}\"")
+#message(STATUS "clang-all: CLANG_INCLUDE_DIRS=\"${CLANG_INCLUDE_DIRS}\"")
+#message(STATUS "clang-all: CLANG_LIBRARIES=\"${CLANG_LIBRARIES}\"")
+#message(STATUS "clang-all: CLANG_LIBDIRS=\"${CLANG_LIBDIRS}\"")
 
 mark_as_advanced(CLANG_INCLUDE_DIRS CLANG_LIBRARIES CLANG_LIBDIRS)

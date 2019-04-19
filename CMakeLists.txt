@@ -72,7 +72,7 @@ option(ZIG_FORCE_EXTERNAL_LLD "If your system has the LLD patches use it instead
 
 set(LLVM_STATIC off CACHE BOOL "Link LLVM statically")
 find_package(llvm)
-find_package(clang-all)
+find_package(clang)
 
 if(MINGW)
     find_package(z3)
